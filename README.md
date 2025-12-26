@@ -93,7 +93,56 @@ npm run dev
 npm run wrangler:dev
 \`\`\`
 
-## Cloudflare Workers 배포
+## 🚀 자동 배포 (권장)
+
+이 프로젝트는 GitHub Actions를 통해 **main 브랜치에 push될 때마다 자동으로 배포**됩니다.
+
+### 초기 설정 (1회만)
+
+**상세 가이드**: [DEPLOYMENT.md](./DEPLOYMENT.md) 참조
+
+1. **Cloudflare API 토큰 생성**
+   - [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens) 접속
+   - "Edit Cloudflare Workers" 템플릿으로 토큰 생성
+   - 권한: Workers Edit, D1 Edit
+
+2. **Cloudflare Account ID 확인**
+   - [Cloudflare 대시보드](https://dash.cloudflare.com) 우측 사이드바에서 복사
+
+3. **GitHub Secrets 설정**
+   - 저장소 Settings > Secrets and variables > Actions
+   - 다음 2개 추가:
+     - `CLOUDFLARE_API_TOKEN`: 생성한 API 토큰
+     - `CLOUDFLARE_ACCOUNT_ID`: Account ID
+
+4. **D1 데이터베이스 생성 및 설정**
+   \`\`\`bash
+   wrangler d1 create prompt-parrot-db
+   # 출력된 database_id를 wrangler.toml에 입력
+   \`\`\`
+
+5. **Gemini API 키 설정**
+   \`\`\`bash
+   wrangler secret put GEMINI_API_KEY
+   \`\`\`
+
+### 자동 배포 사용하기
+
+\`\`\`bash
+# main 브랜치에 push하면 자동 배포
+git add .
+git commit -m "Update feature"
+git push origin main
+# → GitHub Actions가 자동으로 빌드 및 배포 🚀
+\`\`\`
+
+**배포 상태 확인**: GitHub 저장소 > Actions 탭
+
+---
+
+## Cloudflare Workers 수동 배포
+
+자동 배포 설정 없이 수동으로 배포하는 방법:
 
 ### 1. 프로덕션 D1 마이그레이션
 
