@@ -21,29 +21,31 @@
 2. Workers & Pages 페이지로 이동
 3. 우측 사이드바에서 **Account ID** 복사
 
-### 3. GitHub Secrets 설정
+### 3. Gemini API 키 발급
+
+1. [Google AI Studio](https://ai.google.dev/) 접속
+2. **Get API Key** 클릭
+3. API Key 생성 및 복사
+
+### 4. GitHub Secrets 설정
 
 1. GitHub 저장소 페이지 접속
 2. **Settings** > **Secrets and variables** > **Actions**
-3. **New repository secret** 클릭하여 다음 2개 추가:
+3. **New repository secret** 클릭하여 다음 **3개** 추가:
 
    **Secret 1:**
    - Name: `CLOUDFLARE_API_TOKEN`
-   - Value: 위에서 생성한 API 토큰
+   - Value: Cloudflare에서 생성한 API 토큰
 
    **Secret 2:**
    - Name: `CLOUDFLARE_ACCOUNT_ID`
-   - Value: 위에서 복사한 Account ID
+   - Value: Cloudflare Account ID
 
-### 4. Gemini API 키 설정 (최초 1회)
+   **Secret 3:**
+   - Name: `GEMINI_API_KEY`
+   - Value: Google AI Studio에서 생성한 API 키
 
-wrangler CLI로 수동 설정 필요 (GitHub Actions에서는 불가능):
-
-\`\`\`bash
-wrangler login
-wrangler secret put GEMINI_API_KEY
-# 프롬프트에 Gemini API 키 입력
-\`\`\`
+**✨ 모든 시크릿을 GitHub에서 한 곳에서 관리!**
 
 ### 5. D1 데이터베이스 생성 (최초 1회)
 
@@ -82,7 +84,10 @@ git push
 3. ✅ 의존성 설치 (`npm ci`)
 4. ✅ Next.js 빌드 (`npm run build`)
 5. ✅ D1 마이그레이션 실행 (`wrangler d1 migrations apply`)
-6. ✅ Cloudflare Workers 배포 (`npm run deploy`)
+6. ✅ **시크릿 동기화** (GitHub Secrets → Cloudflare Workers)
+7. ✅ Cloudflare Workers 배포 (`npm run deploy`)
+
+**💡 핵심**: GitHub Secrets에서 관리하는 모든 시크릿이 자동으로 Cloudflare Workers에 동기화됩니다!
 
 ### 배포 확인
 

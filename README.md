@@ -109,21 +109,21 @@ npm run wrangler:dev
 2. **Cloudflare Account ID 확인**
    - [Cloudflare 대시보드](https://dash.cloudflare.com) 우측 사이드바에서 복사
 
-3. **GitHub Secrets 설정**
-   - 저장소 Settings > Secrets and variables > Actions
-   - 다음 2개 추가:
-     - `CLOUDFLARE_API_TOKEN`: 생성한 API 토큰
-     - `CLOUDFLARE_ACCOUNT_ID`: Account ID
+3. **Gemini API 키 발급**
+   - [Google AI Studio](https://ai.google.dev/) 접속 후 API Key 생성
 
-4. **D1 데이터베이스 생성 및 설정**
+4. **GitHub Secrets 설정**
+   - 저장소 Settings > Secrets and variables > Actions
+   - 다음 **3개** 추가:
+     - `CLOUDFLARE_API_TOKEN`: Cloudflare API 토큰
+     - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare Account ID
+     - `GEMINI_API_KEY`: Gemini API 키
+   - ✨ **모든 시크릿을 GitHub에서 한 곳에서 관리!**
+
+5. **D1 데이터베이스 생성 및 설정**
    \`\`\`bash
    wrangler d1 create prompt-parrot-db
    # 출력된 database_id를 wrangler.toml에 입력
-   \`\`\`
-
-5. **Gemini API 키 설정**
-   \`\`\`bash
-   wrangler secret put GEMINI_API_KEY
    \`\`\`
 
 ### 자동 배포 사용하기
@@ -142,7 +142,7 @@ git push origin main
 
 ## Cloudflare Workers 수동 배포
 
-자동 배포 설정 없이 수동으로 배포하는 방법:
+GitHub Actions 없이 로컬에서 수동으로 배포하는 방법:
 
 ### 1. 프로덕션 D1 마이그레이션
 
@@ -150,7 +150,9 @@ git push origin main
 npm run db:migrate:prod
 \`\`\`
 
-### 2. Gemini API 키 시크릿 설정
+### 2. Gemini API 키 시크릿 설정 (GitHub Actions 미사용 시)
+
+**참고**: GitHub Actions 자동 배포를 사용하면 이 단계는 불필요합니다.
 
 \`\`\`bash
 wrangler secret put GEMINI_API_KEY
