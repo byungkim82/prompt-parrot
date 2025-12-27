@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - claude/llm-translation-webapp-VVUbK  # 현재 개발 브랜치
   workflow_dispatch: # 수동 배포 가능
 
 jobs:
