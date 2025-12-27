@@ -26,11 +26,11 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json() as { error?: string };
         throw new Error(errorData.error || '번역 실패');
       }
 
-      const data = await response.json();
+      const data = await response.json() as { englishText: string };
       setEnglishText(data.englishText);
       setEditedText(data.englishText);
       setIsEditing(false);

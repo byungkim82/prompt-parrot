@@ -22,8 +22,8 @@ export function useHistory() {
         throw new Error('히스토리 조회 실패');
       }
 
-      const data = await response.json();
-      return data.translations as Translation[];
+      const data = await response.json() as { translations: Translation[] };
+      return data.translations;
     },
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.length < 20) return undefined;

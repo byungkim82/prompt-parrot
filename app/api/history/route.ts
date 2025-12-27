@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       .bind(limit, offset)
       .all();
 
-    return NextResponse.json({ translations: results as Translation[] });
+    return NextResponse.json({ translations: results as unknown as Translation[] });
   } catch (error) {
     console.error('Get history error:', error);
     return NextResponse.json(
