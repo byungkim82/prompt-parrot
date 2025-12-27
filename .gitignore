@@ -47,3 +47,4 @@ next-env.d.ts
 
 # build output
 .open-next/
+.claude/settings.local.json
