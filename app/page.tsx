@@ -100,15 +100,32 @@ export default function Home() {
               <span className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center text-sm">🇰🇷</span>
               한국어 입력
             </label>
-            <textarea
-              className="w-full p-4 border-2 border-slate-200 rounded-2xl h-44 resize-none
-                         focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50
-                         bg-slate-50 text-slate-800 placeholder-slate-400
-                         transition-all duration-200"
-              placeholder="번역할 한국어 프롬프트를 입력하세요..."
-              value={koreanText}
-              onChange={(e) => setKoreanText(e.target.value)}
-            />
+            <div className="relative">
+              <textarea
+                className="w-full p-4 pr-12 border-2 border-slate-200 rounded-2xl h-44 resize-none
+                           focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50
+                           bg-slate-50 text-slate-800 placeholder-slate-400
+                           transition-all duration-200"
+                placeholder="번역할 한국어 프롬프트를 입력하세요..."
+                value={koreanText}
+                onChange={(e) => setKoreanText(e.target.value)}
+              />
+              {koreanText.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setKoreanText('')}
+                  aria-label="Clear input"
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full
+                             bg-slate-200 hover:bg-indigo-100
+                             text-slate-600 hover:text-indigo-600
+                             transition-colors duration-200
+                             flex items-center justify-center
+                             cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Translate Button */}
