@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useToast } from './components/ToastProvider';
 
 export default function Home() {
   const [koreanText, setKoreanText] = useState('');
@@ -11,6 +12,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const { showToast } = useToast();
 
   const handleTranslate = async () => {
     if (!koreanText.trim()) return;
@@ -59,9 +61,9 @@ export default function Home() {
           editedEnglishText: editedText !== englishText ? editedText : null,
         }),
       });
-      alert('저장되었습니다!');
+      showToast({ message: '저장되었습니다!', type: 'success' });
     } catch (err) {
-      alert('저장 실패');
+      showToast({ message: '저장 실패', type: 'error' });
     }
   };
 
