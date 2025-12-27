@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 interface SaveHistoryRequest {
   koreanText: string;
@@ -22,9 +23,9 @@ export async function POST(request: NextRequest) {
     const { koreanText, englishText, editedEnglishText }: SaveHistoryRequest =
       await request.json();
 
-    // Get D1 database binding from Cloudflare env
-    const env = process.env as unknown as CloudflareEnv;
-    const db = env.DB;
+    // Get D1 database binding from Cloudflare context
+    const { env } = await getCloudflareContext();
+    const db = (env as CloudflareEnv).DB;
 
     if (!db) {
       return NextResponse.json(
@@ -69,8 +70,8 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
     const limit = 20;
 
-    const env = process.env as unknown as CloudflareEnv;
-    const db = env.DB;
+    const { env } = await getCloudflareContext();
+    const db = (env as CloudflareEnv).DB;
 
     if (!db) {
       return NextResponse.json(
@@ -111,8 +112,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const env = process.env as unknown as CloudflareEnv;
-    const db = env.DB;
+    const { env } = await getCloudflareContext();
+    const db = (env as CloudflareEnv).DB;
 
     if (!db) {
       return NextResponse.json(
