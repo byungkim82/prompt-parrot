@@ -40,7 +40,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          echo "$GEMINI_API_KEY" | npx wrangler secret put GEMINI_API_KEY --env production
+          echo "$GEMINI_API_KEY" | npx wrangler secret put GEMINI_API_KEY
 
       - name: Deploy to Cloudflare Workers
         env:
