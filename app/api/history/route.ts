@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 interface SaveHistoryRequest {
   koreanText: string;
   englishText: string;

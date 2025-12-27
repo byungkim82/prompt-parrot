@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "npx @opennextjs/cloudflare",
+    "deploy": "npx @opennextjs/cloudflare build && wrangler deploy",
     "wrangler:dev": "wrangler dev",
     "db:create": "wrangler d1 create prompt-parrot-db",
     "db:migrate:local": "wrangler d1 migrations apply prompt-parrot-db --local",
