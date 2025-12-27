@@ -84,7 +84,7 @@ export default function Home() {
             한국어 입력
           </label>
           <textarea
-            className="w-full p-4 border rounded-lg h-40 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 border rounded-lg h-40 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             placeholder="번역할 한국어 프롬프트를 입력하세요..."
             value={koreanText}
             onChange={(e) => setKoreanText(e.target.value)}
@@ -132,12 +132,12 @@ export default function Home() {
 
             {isEditing ? (
               <textarea
-                className="w-full p-4 border rounded-lg h-40 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-4 border rounded-lg h-40 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
               />
             ) : (
-              <div className="w-full p-4 border rounded-lg bg-white whitespace-pre-wrap">
+              <div className="w-full p-4 border rounded-lg bg-white text-gray-900 whitespace-pre-wrap">
                 {editedText}
               </div>
             )}
