@@ -54,7 +54,7 @@ ${koreanText}
 **English Translation:**`;
 
     const response = await fetch(
-      `https://gateway.ai.cloudflare.com/v1/c20598b7e5410e23541b2f02ee4c9478/prompt-parrot/google-ai-studio/v1beta/models/gemini-2.5-flash-lite:generateContent`,
+      `https://gateway.ai.cloudflare.com/v1/c20598b7e5410e23541b2f02ee4c9478/prompt-parrot/google-ai-studio/v1/models/gemini-2.5-flash-lite:generateContent`,
       {
         method: 'POST',
         headers: {
