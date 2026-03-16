@@ -11,6 +11,7 @@ export default function HistoryPage() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
   } = useHistory();
 
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -78,6 +79,28 @@ export default function HistoryPage() {
     link.download = `translations-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
   };
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-4 md:p-8">
+        <div className="max-w-3xl mx-auto flex items-center justify-center min-h-[60vh]">
+          <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-8 text-center border border-slate-100">
+            <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <p className="text-slate-700 font-medium mb-2">히스토리를 불러오지 못했습니다</p>
+            <p className="text-slate-400 text-sm mb-4">네트워크 연결을 확인하고 다시 시도해주세요.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-5 py-2.5 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-all duration-200"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
