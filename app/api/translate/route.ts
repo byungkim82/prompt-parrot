@@ -23,6 +23,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (koreanText.length > 5000) {
+      return NextResponse.json(
+        { error: '입력 텍스트가 너무 깁니다. (최대 5,000자)' },
+        { status: 400 }
+      );
+    }
+
     // Get Gemini API key from environment
     const apiKey = process.env.GEMINI_API_KEY;
 

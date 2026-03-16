@@ -109,6 +109,7 @@ export default function Home() {
                 placeholder="번역할 한국어 프롬프트를 입력하세요..."
                 value={koreanText}
                 onChange={(e) => setKoreanText(e.target.value)}
+                maxLength={4000}
               />
               {koreanText.length > 0 && (
                 <button
