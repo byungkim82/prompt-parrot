@@ -52,7 +52,7 @@ export default function Home() {
 
   const handleSave = async () => {
     try {
-      await fetch('/api/history', {
+      const response = await fetch('/api/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -61,6 +61,10 @@ export default function Home() {
           editedEnglishText: editedText !== englishText ? editedText : null,
         }),
       });
+      if (!response.ok) {
+        showToast({ message: '저장 실패', type: 'error' });
+        return;
+      }
       showToast({ message: '저장되었습니다!', type: 'success' });
     } catch (err) {
       showToast({ message: '저장 실패', type: 'error' });
