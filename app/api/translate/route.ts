@@ -68,6 +68,7 @@ ${koreanText}
             maxOutputTokens: 4096,
           },
         }),
+        signal: AbortSignal.timeout(25000),
       }
     );
 
@@ -86,6 +87,12 @@ ${koreanText}
 
     return NextResponse.json({ englishText: englishText.trim() });
   } catch (error) {
+    if (error instanceof DOMException && error.name === 'TimeoutError') {
+      return NextResponse.json(
+        { error: '번역 요청 시간이 초과되었습니다. 다시 시도해주세요.' },
+        { status: 504 }
+      );
+    }
     console.error('Translation error:', error);
     return NextResponse.json(
       { error: '번역 중 오류가 발생했습니다. 다시 시도해주세요.' },
