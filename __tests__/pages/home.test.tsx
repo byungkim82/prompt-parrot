@@ -117,7 +117,7 @@ describe('Home Page', () => {
       expect(screen.getByText('Hello world')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('영어 번역 결과')).toBeInTheDocument();
+    expect(screen.getByText('출력 · English')).toBeInTheDocument();
   });
 
   it('shows error message on translation failure', async () => {

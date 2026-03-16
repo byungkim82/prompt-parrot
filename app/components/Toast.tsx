@@ -25,18 +25,26 @@ export function Toast({ id, message, type, duration = 3000, onClose }: ToastProp
 
   const styles = {
     success: {
-      bg: 'bg-emerald-500',
-      shadow: 'shadow-lg shadow-emerald-200',
+      container: 'bg-slate-900 dark:bg-slate-800 border-emerald-700 dark:border-emerald-600',
       icon: (
-        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
+        <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded bg-emerald-600 dark:bg-emerald-500">
+          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
       ),
+      text: 'text-slate-100 dark:text-slate-100',
     },
     error: {
-      bg: 'bg-red-500',
-      shadow: 'shadow-lg shadow-red-200',
-      icon: <span className="text-xl flex-shrink-0">⚠️</span>,
+      container: 'bg-slate-900 dark:bg-slate-800 border-red-700 dark:border-red-600',
+      icon: (
+        <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded bg-red-600 dark:bg-red-500">
+          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </span>
+      ),
+      text: 'text-slate-100 dark:text-slate-100',
     },
   };
 
@@ -49,20 +57,22 @@ export function Toast({ id, message, type, duration = 3000, onClose }: ToastProp
       aria-atomic="true"
       className={`fixed top-4 left-1/2 -translate-x-1/2 z-50
                   flex items-center gap-3
-                  ${style.bg} text-white
-                  px-5 py-4 rounded-2xl
-                  ${style.shadow}
-                  min-w-[320px] max-w-md
+                  ${style.container}
+                  border
+                  px-4 py-3 rounded-md
+                  shadow-xl shadow-black/30
+                  min-w-[300px] max-w-md
                   ${isExiting ? 'animate-fadeOut' : 'animate-slideDown'}`}
     >
       {style.icon}
-      <span className="font-semibold flex-1">{message}</span>
+      <span className={`font-medium text-sm flex-1 font-mono ${style.text}`}>{message}</span>
       <button
         onClick={handleClose}
-        className="hover:bg-white/20 rounded-lg p-1 transition-colors"
+        className="text-slate-500 hover:text-slate-300 dark:text-slate-500 dark:hover:text-slate-300
+                   rounded p-0.5 transition-colors duration-150"
         aria-label="닫기"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
