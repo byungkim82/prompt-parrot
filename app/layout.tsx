@@ -19,6 +19,8 @@ export default function RootLayout({
         <link
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
           rel="stylesheet"
+          integrity="sha384-uGEvnSEpW2nM9xJFsrxrwakwrk9QdDTQIBJh0hVMu90OaVyMAMpAK1rIn0/Kh1/k"
+          crossOrigin="anonymous"
         />
       </head>
       <body className="antialiased">
