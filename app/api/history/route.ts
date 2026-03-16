@@ -105,9 +105,10 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    if (!id) {
+    const numericId = Number(id);
+    if (!id || !Number.isInteger(numericId) || numericId <= 0) {
       return NextResponse.json(
-        { error: 'ID가 필요합니다.' },
+        { error: '유효한 ID가 필요합니다.' },
         { status: 400 }
       );
     }
@@ -122,10 +123,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await db
+    const result = await db
       .prepare('DELETE FROM translations WHERE id = ?')
-      .bind(id)
+      .bind(numericId)
       .run();
+
+    if (result.meta.changes === 0) {
+      return NextResponse.json(
+        { error: '해당 ID의 번역이 존재하지 않습니다.' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
