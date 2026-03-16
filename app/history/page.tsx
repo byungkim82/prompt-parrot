@@ -41,10 +41,14 @@ export default function HistoryPage() {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleCopy = async (translation: Translation) => {
-    const textToCopy = translation.edited_english_text || translation.english_text;
-    await navigator.clipboard.writeText(textToCopy);
-    setCopiedId(translation.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    try {
+      const textToCopy = translation.edited_english_text || translation.english_text;
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedId(translation.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      showToast({ message: '클립보드 복사 실패', type: 'error' });
+    }
   };
 
   const queryClient = useQueryClient();

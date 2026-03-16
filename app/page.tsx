@@ -44,10 +44,14 @@ export default function Home() {
   };
 
   const handleCopy = async () => {
-    const textToCopy = isEditing ? editedText : englishText;
-    await navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      const textToCopy = isEditing ? editedText : englishText;
+      await navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      showToast({ message: '클립보드 복사 실패', type: 'error' });
+    }
   };
 
   const handleSave = async () => {
