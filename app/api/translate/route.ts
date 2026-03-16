@@ -90,6 +90,14 @@ ${koreanText}
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API Error:', errorText);
+
+      if (response.status === 429) {
+        return NextResponse.json(
+          { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+          { status: 429 }
+        );
+      }
+
       throw new Error('번역 API 호출 실패');
     }
 
