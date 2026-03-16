@@ -2,7 +2,9 @@
 
 import { useHistory, Translation } from '../hooks/useHistory';
 import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useToast } from '../components/ToastProvider';
 
 export default function HistoryPage() {
   const {
@@ -43,16 +45,23 @@ export default function HistoryPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+
   const handleDelete = async (id: number) => {
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      await fetch(`/api/history?id=${id}`, {
+      const response = await fetch(`/api/history?id=${id}`, {
         method: 'DELETE',
       });
-      window.location.reload(); // 간단하게 새로고침
+      if (!response.ok) {
+        showToast({ message: '삭제 실패', type: 'error' });
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ['translations'] });
     } catch (error) {
-      alert('삭제 실패');
+      showToast({ message: '삭제 실패', type: 'error' });
     }
   };
 
