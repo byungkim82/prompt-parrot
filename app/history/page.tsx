@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useToast } from '../components/ToastProvider';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function HistoryPage() {
   const {
@@ -19,6 +20,7 @@ export default function HistoryPage() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   // 무한 스크롤
   useEffect(() => {
@@ -49,8 +51,6 @@ export default function HistoryPage() {
   const { showToast } = useToast();
 
   const handleDelete = async (id: number) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
-
     try {
       const response = await fetch(`/api/history?id=${id}`, {
         method: 'DELETE',
@@ -62,6 +62,8 @@ export default function HistoryPage() {
       queryClient.invalidateQueries({ queryKey: ['translations'] });
     } catch (error) {
       showToast({ message: '삭제 실패', type: 'error' });
+    } finally {
+      setDeleteTargetId(null);
     }
   };
 
@@ -252,7 +254,7 @@ export default function HistoryPage() {
                       )}
                     </button>
                     <button
-                      onClick={() => handleDelete(translation.id)}
+                      onClick={() => setDeleteTargetId(translation.id)}
                       className="bg-red-500 text-white px-4 py-2.5 rounded-xl font-medium text-sm
                                  hover:bg-red-600 transition-all duration-200
                                  shadow-md shadow-red-200 hover:shadow-lg
@@ -300,6 +302,14 @@ export default function HistoryPage() {
           Powered by Gemini 2.5 Flash
         </footer>
       </div>
+
+      {deleteTargetId !== null && (
+        <ConfirmModal
+          message="정말 삭제하시겠습니까?"
+          onConfirm={() => handleDelete(deleteTargetId)}
+          onCancel={() => setDeleteTargetId(null)}
+        />
+      )}
     </div>
   );
 }
