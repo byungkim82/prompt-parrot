@@ -6,17 +6,19 @@ export interface Translation {
   english_text: string;
   edited_english_text: string | null;
   is_edited: number;
+  llm_used: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export function useHistory() {
+export function useHistory(modelFilter?: string) {
   return useInfiniteQuery({
-    queryKey: ['translations'],
+    queryKey: ['translations', modelFilter],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await fetch(
-        `/api/history?offset=${pageParam}`
-      );
+      const params = new URLSearchParams({ offset: String(pageParam) });
+      if (modelFilter) params.set('model', modelFilter);
+
+      const response = await fetch(`/api/history?${params}`);
 
       if (!response.ok) {
         throw new Error('히스토리 조회 실패');

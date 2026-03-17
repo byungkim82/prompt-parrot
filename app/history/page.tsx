@@ -54,6 +54,7 @@ function ThemeToggle() {
 }
 
 export default function HistoryPage() {
+  const [modelFilter, setModelFilter] = useState<string>('');
   const {
     data,
     fetchNextPage,
@@ -61,7 +62,7 @@ export default function HistoryPage() {
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useHistory();
+  } = useHistory(modelFilter || undefined);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -236,6 +237,28 @@ export default function HistoryPage() {
           </div>
         </header>
 
+        {/* Filters */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
+            모델
+          </span>
+          <div className="flex gap-1.5">
+            {['', 'gemini-2.5-flash-lite', 'claude-haiku-4-5-20251001'].map((model) => (
+              <button
+                key={model}
+                onClick={() => setModelFilter(model)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors duration-150 border
+                  ${modelFilter === model
+                    ? 'bg-indigo-500 dark:bg-indigo-600 text-white border-indigo-500 dark:border-indigo-600'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                  }`}
+              >
+                {model === '' ? '전체' : model === 'gemini-2.5-flash-lite' ? 'Gemini' : 'Claude'}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* History List */}
         <div className="space-y-3">
           {data?.pages.map((page, i) => (
@@ -263,18 +286,25 @@ export default function HistoryPage() {
                         minute: '2-digit',
                       })}
                     </div>
-                    {translation.is_edited === 1 && (
-                      <span className="flex items-center gap-1 text-xs
-                                       bg-amber-100 dark:bg-amber-900/30
-                                       text-amber-700 dark:text-amber-400
-                                       border border-amber-200 dark:border-amber-800
-                                       px-2 py-0.5 rounded font-medium">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        편집됨
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {translation.llm_used && (
+                        <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-mono border border-slate-200 dark:border-slate-700">
+                          {translation.llm_used === 'gemini-2.5-flash-lite' ? 'Gemini' : translation.llm_used === 'claude-haiku-4-5-20251001' ? 'Claude' : translation.llm_used}
+                        </span>
+                      )}
+                      {translation.is_edited === 1 && (
+                        <span className="flex items-center gap-1 text-xs
+                                         bg-amber-100 dark:bg-amber-900/30
+                                         text-amber-700 dark:text-amber-400
+                                         border border-amber-200 dark:border-amber-800
+                                         px-2 py-0.5 rounded font-medium">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          편집됨
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Korean Text */}
@@ -389,7 +419,7 @@ export default function HistoryPage() {
 
         {/* Footer */}
         <footer className="mt-4 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
-          Powered by Gemini 2.5 Flash
+          Powered by Gemini &amp; Claude
         </footer>
       </div>
 

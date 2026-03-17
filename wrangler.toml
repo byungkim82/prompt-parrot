@@ -16,4 +16,4 @@ database_id = "6d3f2e83-98ac-4347-9b86-20f9070b2eba"
 
 [vars]
 NODE_ENV = "production"
-CF_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/c20598b7e5410e23541b2f02ee4c9478/prompt-parrot/google-ai-studio"
+CF_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/c20598b7e5410e23541b2f02ee4c9478/prompt-parrot"

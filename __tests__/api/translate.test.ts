@@ -28,6 +28,7 @@ describe('POST /api/translate', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.stubEnv('GEMINI_API_KEY', 'test-api-key');
+    vi.stubEnv('ANTHROPIC_API_KEY', 'test-anthropic-key');
     vi.stubEnv('CF_AI_GATEWAY_URL', 'https://gateway.example.com');
   });
 
@@ -36,7 +37,7 @@ describe('POST /api/translate', () => {
   it('returns 400 for empty input', async () => {
     const res = await POST(createRequest({ koreanText: '' }));
     expect(res.status).toBe(400);
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.error).toContain('한국어 텍스트를 입력해주세요');
   });
 
@@ -48,7 +49,7 @@ describe('POST /api/translate', () => {
   it('returns 400 for input exceeding 5000 characters', async () => {
     const res = await POST(createRequest({ koreanText: 'a'.repeat(5001) }));
     expect(res.status).toBe(400);
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.error).toContain('5,000자');
   });
 
@@ -70,7 +71,7 @@ describe('POST /api/translate', () => {
     vi.stubEnv('CF_AI_GATEWAY_URL', '');
     const res = await POST(createRequest({ koreanText: '안녕하세요' }));
     expect(res.status).toBe(500);
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.error).toContain('AI Gateway');
   });
 
@@ -84,7 +85,7 @@ describe('POST /api/translate', () => {
     });
     const res = await POST(createRequest({ koreanText: '안녕하세요' }));
     expect(res.status).toBe(429);
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.error).toContain('요청이 너무 많습니다');
   });
 
@@ -114,7 +115,7 @@ describe('POST /api/translate', () => {
     mockFetch.mockRejectedValueOnce(timeoutError);
     const res = await POST(createRequest({ koreanText: '안녕하세요' }));
     expect(res.status).toBe(504);
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.error).toContain('시간이 초과');
   });
 
@@ -124,14 +125,15 @@ describe('POST /api/translate', () => {
     mockFetch.mockResolvedValueOnce(geminiResponse('Hello world'));
     const res = await POST(createRequest({ koreanText: '안녕하세요' }));
     expect(res.status).toBe(200);
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.englishText).toBe('Hello world');
+    expect(data.model).toBe('gemini-2.5-flash-lite');
   });
 
   it('trims whitespace from translated text', async () => {
     mockFetch.mockResolvedValueOnce(geminiResponse('  Hello world  \n'));
     const res = await POST(createRequest({ koreanText: '안녕하세요' }));
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.englishText).toBe('Hello world');
   });
 
@@ -141,7 +143,7 @@ describe('POST /api/translate', () => {
 
     expect(mockFetch).toHaveBeenCalledOnce();
     const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('https://gateway.example.com/v1/models/gemini-2.5-flash-lite:generateContent');
+    expect(url).toContain('https://gateway.example.com/google-ai-studio/v1/models/gemini-2.5-flash-lite:generateContent');
     expect(options.method).toBe('POST');
     expect(options.headers['x-goog-api-key']).toBe('test-api-key');
     expect(options.signal).toBeDefined();
@@ -150,5 +152,46 @@ describe('POST /api/translate', () => {
     expect(body.contents[0].parts[0].text).toContain('테스트');
     expect(body.generationConfig.temperature).toBe(0.1);
     expect(body.generationConfig.maxOutputTokens).toBe(4096);
+  });
+
+  it('returns 400 for invalid model', async () => {
+    const res = await POST(createRequest({ koreanText: '안녕하세요', model: 'invalid' }));
+    expect(res.status).toBe(400);
+    const data = await res.json() as Record<string, unknown>;
+    expect(data.error).toContain('지원하지 않는 모델');
+  });
+
+  it('sends correct request to Claude API', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({
+        content: [{ type: 'text', text: 'translated by claude' }],
+        model: 'claude-haiku-4-5-20251001',
+      }),
+    });
+    const res = await POST(createRequest({ koreanText: '테스트', model: 'claude' }));
+    expect(res.status).toBe(200);
+    const data = await res.json() as Record<string, unknown>;
+    expect(data.englishText).toBe('translated by claude');
+    expect(data.model).toBe('claude-haiku-4-5-20251001');
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain('https://gateway.example.com/anthropic/v1/messages');
+    expect(options.headers['x-api-key']).toBe('test-anthropic-key');
+    expect(options.headers['anthropic-version']).toBe('2023-06-01');
+
+    const body = JSON.parse(options.body);
+    expect(body.model).toBe('claude-haiku-4-5-20251001');
+    expect(body.messages[0].content).toContain('테스트');
+    expect(body.temperature).toBe(0.1);
+  });
+
+  it('returns 500 when ANTHROPIC_API_KEY is not set for Claude model', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', '');
+    const res = await POST(createRequest({ koreanText: '안녕하세요', model: 'claude' }));
+    expect(res.status).toBe(500);
+    const data = await res.json() as Record<string, unknown>;
+    expect(data.error).toContain('API 키가 설정되지 않았습니다');
   });
 });

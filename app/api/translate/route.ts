@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { callLLM, LLMProvider } from '@/lib/llm';
 
 interface TranslateRequest {
   koreanText: string;
+  model?: LLMProvider;
 }
 
-interface GeminiResponse {
-  candidates: Array<{
-    content: {
-      parts: Array<{ text: string }>;
-    };
-  }>;
-}
+const VALID_MODELS: LLMProvider[] = ['gemini', 'claude'];
 
 export async function POST(request: NextRequest) {
   try {
-    const { koreanText }: TranslateRequest = await request.json();
+    const { koreanText, model = 'gemini' }: TranslateRequest = await request.json();
 
     if (!koreanText || koreanText.trim().length === 0) {
       return NextResponse.json(
@@ -30,17 +26,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get Gemini API key from environment
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
+    if (!VALID_MODELS.includes(model)) {
       return NextResponse.json(
-        { error: 'API 키가 설정되지 않았습니다. wrangler secret put GEMINI_API_KEY를 실행하세요.' },
+        { error: `지원하지 않는 모델입니다: ${model}` },
+        { status: 400 }
+      );
+    }
+
+    const gatewayBaseUrl = process.env.CF_AI_GATEWAY_URL;
+    if (!gatewayBaseUrl) {
+      return NextResponse.json(
+        { error: 'AI Gateway URL이 설정되지 않았습니다.' },
         { status: 500 }
       );
     }
 
-    // LLM 프롬프트 최적화 전용 번역 프롬프트
     const prompt = `You are a professional prompt engineer and expert translator. Your task is to translate Korean LLM instructions into high-quality English prompts.
 
 ### Translation Guidelines:
@@ -60,63 +60,42 @@ ${koreanText}
 
 **English Translation:**`;
 
-    const gatewayBaseUrl = process.env.CF_AI_GATEWAY_URL;
-    if (!gatewayBaseUrl) {
+    const result = await callLLM({
+      provider: model,
+      prompt,
+      gatewayBaseUrl,
+      apiKeys: {
+        gemini: process.env.GEMINI_API_KEY,
+        anthropic: process.env.ANTHROPIC_API_KEY,
+      },
+    });
+
+    return NextResponse.json({ englishText: result.text, model: result.model });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Translation error:', message);
+
+    if (message.includes('rate limit')) {
       return NextResponse.json(
-        { error: 'AI Gateway URL이 설정되지 않았습니다.' },
-        { status: 500 }
+        { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+        { status: 429 }
       );
     }
 
-    const response = await fetch(
-      `${gatewayBaseUrl}/v1/models/gemini-2.5-flash-lite:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.1,  // 낮은 온도로 일관성 향상
-            maxOutputTokens: 4096,
-          },
-        }),
-        signal: AbortSignal.timeout(25000),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API Error:', errorText);
-
-      if (response.status === 429) {
-        return NextResponse.json(
-          { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
-          { status: 429 }
-        );
-      }
-
-      throw new Error('번역 API 호출 실패');
-    }
-
-    const data: GeminiResponse = await response.json();
-    const englishText = data.candidates[0]?.content?.parts[0]?.text;
-
-    if (!englishText) {
-      throw new Error('번역 결과를 받지 못했습니다.');
-    }
-
-    return NextResponse.json({ englishText: englishText.trim() });
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'TimeoutError') {
+    if (message.includes('timed out')) {
       return NextResponse.json(
         { error: '번역 요청 시간이 초과되었습니다. 다시 시도해주세요.' },
         { status: 504 }
       );
     }
-    console.error('Translation error:', error);
+
+    if (message.includes('API key is required')) {
+      return NextResponse.json(
+        { error: '해당 모델의 API 키가 설정되지 않았습니다.' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: '번역 중 오류가 발생했습니다. 다시 시도해주세요.' },
       { status: 500 }

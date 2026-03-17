@@ -58,7 +58,19 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<'gemini' | 'claude'>('gemini');
+  const [availableModels, setAvailableModels] = useState<Array<{ id: string; name: string; available: boolean }>>([]);
+  const [usedModel, setUsedModel] = useState<string | null>(null);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    fetch('/api/models')
+      .then(res => res.json() as Promise<{ models: Array<{ id: string; name: string; available: boolean }> }>)
+      .then((data) => {
+        setAvailableModels(data.models);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleTranslate = async () => {
     if (!koreanText.trim()) return;
@@ -70,7 +82,7 @@ export default function Home() {
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ koreanText }),
+        body: JSON.stringify({ koreanText, model: selectedModel }),
       });
 
       if (!response.ok) {
@@ -78,9 +90,10 @@ export default function Home() {
         throw new Error(errorData.error || '번역 실패');
       }
 
-      const data = await response.json() as { englishText: string };
+      const data = await response.json() as { englishText: string; model: string };
       setEnglishText(data.englishText);
       setEditedText(data.englishText);
+      setUsedModel(data.model);
       setIsEditing(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : '번역 중 오류가 발생했습니다.');
@@ -109,6 +122,7 @@ export default function Home() {
           koreanText,
           englishText,
           editedEnglishText: editedText !== englishText ? editedText : null,
+          llmUsed: usedModel,
         }),
       });
       if (!response.ok) {
@@ -211,6 +225,38 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Model Selector */}
+          <div className="flex gap-2 mb-4">
+            {availableModels.length > 0 ? (
+              availableModels.map((model) => (
+                <button
+                  key={model.id}
+                  onClick={() => model.available && setSelectedModel(model.id as 'gemini' | 'claude')}
+                  disabled={!model.available}
+                  title={!model.available ? 'API 키가 설정되지 않았습니다' : model.name}
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors duration-150 border
+                    ${selectedModel === model.id
+                      ? 'bg-indigo-500 dark:bg-indigo-600 text-white border-indigo-500 dark:border-indigo-600'
+                      : model.available
+                        ? 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                        : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 border-slate-200 dark:border-slate-800 cursor-not-allowed opacity-50'
+                    }`}
+                >
+                  {model.name}
+                </button>
+              ))
+            ) : (
+              <>
+                <div className="flex-1 py-2 px-3 rounded-md bg-indigo-500 dark:bg-indigo-600 text-white text-sm font-medium border border-indigo-500 dark:border-indigo-600 text-center">
+                  Gemini 2.5 Flash Lite
+                </div>
+                <div className="flex-1 py-2 px-3 rounded-md bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 text-sm font-medium border border-slate-200 dark:border-slate-800 text-center animate-pulse">
+                  Loading...
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Translate Button */}
           <button
             onClick={handleTranslate}
@@ -267,9 +313,16 @@ export default function Home() {
           {englishText && (
             <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-800">
               <div className="flex justify-between items-center mb-2">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
-                  출력 · English
-                </label>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
+                    출력 · English
+                  </label>
+                  {usedModel && (
+                    <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-mono border border-slate-200 dark:border-slate-700">
+                      {usedModel}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
                   className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors duration-150
@@ -350,7 +403,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="mt-6 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
-          Powered by Gemini 2.5 Flash
+          Powered by Gemini & Claude
         </footer>
       </div>
     </div>

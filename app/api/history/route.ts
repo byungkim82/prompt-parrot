@@ -5,6 +5,7 @@ interface SaveHistoryRequest {
   koreanText: string;
   englishText: string;
   editedEnglishText?: string;
+  llmUsed?: string;
 }
 
 interface Translation {
@@ -13,6 +14,7 @@ interface Translation {
   english_text: string;
   edited_english_text: string | null;
   is_edited: number;
+  llm_used: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,7 +22,7 @@ interface Translation {
 // Save translation to history
 export async function POST(request: NextRequest) {
   try {
-    const { koreanText, englishText, editedEnglishText }: SaveHistoryRequest =
+    const { koreanText, englishText, editedEnglishText, llmUsed }: SaveHistoryRequest =
       await request.json();
 
     // Get D1 database binding from Cloudflare context
@@ -39,14 +41,15 @@ export async function POST(request: NextRequest) {
     const result = await db
       .prepare(
         `INSERT INTO translations
-        (korean_text, english_text, edited_english_text, is_edited)
-        VALUES (?, ?, ?, ?)`
+        (korean_text, english_text, edited_english_text, is_edited, llm_used)
+        VALUES (?, ?, ?, ?, ?)`
       )
       .bind(
         koreanText,
         englishText,
         editedEnglishText || null,
-        isEdited ? 1 : 0
+        isEdited ? 1 : 0,
+        llmUsed || null
       )
       .run();
 
@@ -69,6 +72,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const offset = parseInt(searchParams.get('offset') || '0');
     const limit = 20;
+    const model = searchParams.get('model');
 
     const { env } = await getCloudflareContext();
     const db = (env as CloudflareEnv).DB;
@@ -80,14 +84,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { results } = await db
-      .prepare(
-        `SELECT * FROM translations
-         ORDER BY created_at DESC
-         LIMIT ? OFFSET ?`
-      )
-      .bind(limit, offset)
-      .all();
+    const { results } = await (model
+      ? db
+          .prepare(
+            `SELECT * FROM translations WHERE llm_used = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
+          )
+          .bind(model, limit, offset)
+      : db
+          .prepare(
+            `SELECT * FROM translations ORDER BY created_at DESC LIMIT ? OFFSET ?`
+          )
+          .bind(limit, offset)
+    ).all();
 
     return NextResponse.json({ translations: results as unknown as Translation[] });
   } catch (error) {

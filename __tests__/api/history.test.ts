@@ -69,12 +69,12 @@ describe('POST /api/history', () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
 
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.success).toBe(true);
     expect(data.id).toBeDefined();
 
     // is_edited should be 0 when no edit
-    expect(bind).toHaveBeenCalledWith('안녕', 'hello', null, 0);
+    expect(bind).toHaveBeenCalledWith('안녕', 'hello', null, 0, null);
   });
 
   it('saves translation with edit (is_edited=1)', async () => {
@@ -94,7 +94,7 @@ describe('POST /api/history', () => {
     expect(res.status).toBe(200);
 
     // is_edited should be 1 when edited text differs
-    expect(bind).toHaveBeenCalledWith('안녕', 'hello', 'hi there', 1);
+    expect(bind).toHaveBeenCalledWith('안녕', 'hello', 'hi there', 1, null);
   });
 
   it('saves with is_edited=0 when editedEnglishText equals englishText', async () => {
@@ -113,7 +113,26 @@ describe('POST /api/history', () => {
     await POST(req);
 
     // Same text = not edited
-    expect(bind).toHaveBeenCalledWith('안녕', 'hello', 'hello', 0);
+    expect(bind).toHaveBeenCalledWith('안녕', 'hello', 'hello', 0, null);
+  });
+
+  it('saves translation with llmUsed', async () => {
+    const { db, bind } = createMockDb();
+    setupContext(db);
+
+    const req = new NextRequest('http://localhost/api/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        koreanText: '안녕',
+        englishText: 'hello',
+        editedEnglishText: null,
+        llmUsed: 'gemini-2.5-flash-lite',
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(bind).toHaveBeenCalledWith('안녕', 'hello', null, 0, 'gemini-2.5-flash-lite');
   });
 
   it('returns 500 on DB error', async () => {
@@ -157,7 +176,7 @@ describe('GET /api/history', () => {
     const res = await GET(req);
     expect(res.status).toBe(200);
 
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.translations).toEqual(mockTranslations);
 
     // Default: limit=20, offset=0
@@ -174,6 +193,28 @@ describe('GET /api/history', () => {
     expect(res.status).toBe(200);
 
     expect(bind).toHaveBeenCalledWith(20, 40);
+  });
+
+  it('filters by model when model param is provided', async () => {
+    const { db, bind, all } = createMockDb();
+    all.mockResolvedValue({ results: [] });
+    setupContext(db);
+
+    const req = new NextRequest('http://localhost/api/history?model=gemini-2.5-flash-lite');
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+    expect(bind).toHaveBeenCalledWith('gemini-2.5-flash-lite', 20, 0);
+  });
+
+  it('filters by model with custom offset', async () => {
+    const { db, bind, all } = createMockDb();
+    all.mockResolvedValue({ results: [] });
+    setupContext(db);
+
+    const req = new NextRequest('http://localhost/api/history?model=claude-haiku-4-5-20251001&offset=20');
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+    expect(bind).toHaveBeenCalledWith('claude-haiku-4-5-20251001', 20, 20);
   });
 
   it('returns 500 on DB error', async () => {
@@ -249,7 +290,7 @@ describe('DELETE /api/history', () => {
     const res = await DELETE(req);
     expect(res.status).toBe(200);
 
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     expect(data.success).toBe(true);
     expect(bind).toHaveBeenCalledWith(1);
   });
